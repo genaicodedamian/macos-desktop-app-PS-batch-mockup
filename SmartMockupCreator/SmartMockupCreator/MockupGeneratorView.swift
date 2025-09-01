@@ -16,10 +16,16 @@ struct SmartObjectLayer: Identifiable {
 
 class MockupGeneratorViewModel: ObservableObject {
     @Published var inputFolderPath: String = "" {
-        didSet { validateInputFolder() }
+        didSet { 
+            validateInputFolder()
+            PathRestorationService.savePath(inputFolderPath, for: .inputFolder)
+        }
     }
     @Published var mockupFolderPath: String = "" {
-        didSet { validateMockupFolder() }
+        didSet { 
+            validateMockupFolder()
+            PathRestorationService.savePath(mockupFolderPath, for: .mockupFolder)
+        }
     }
     @Published var smartObjectLayers: [SmartObjectLayer] = [SmartObjectLayer()] {
         didSet { validateLayers() }
@@ -40,6 +46,10 @@ class MockupGeneratorViewModel: ObservableObject {
     
     let resizeOptions = ["fit", "fill", "fillX", "fillY"]
     
+    init() {
+        restorePaths()
+    }
+    
     func addLayer() {
         if smartObjectLayers.count < 10 {
             smartObjectLayers.append(SmartObjectLayer())
@@ -52,7 +62,36 @@ class MockupGeneratorViewModel: ObservableObject {
         }
     }
     
-    func resetForm() {
+    private func restorePaths() {
+        let restoredInputPath = PathRestorationService.restorePath(for: .inputFolder)
+        let restoredMockupPath = PathRestorationService.restorePath(for: .mockupFolder)
+        
+        // Użyj bezpośredniego przypisania, żeby uniknąć podwójnego wywołania didSet
+        if !restoredInputPath.isEmpty {
+            _inputFolderPath = Published(initialValue: restoredInputPath)
+            inputFolderPath = restoredInputPath
+        }
+        
+        if !restoredMockupPath.isEmpty {
+            _mockupFolderPath = Published(initialValue: restoredMockupPath)
+            mockupFolderPath = restoredMockupPath
+        }
+    }
+    
+    func requestResetConfirmation() {
+        showResetConfirmation = true
+    }
+    
+    func confirmReset() {
+        resetForm()
+        showResetConfirmation = false
+    }
+    
+    func cancelReset() {
+        showResetConfirmation = false
+    }
+    
+    private func resetForm() {
         inputFolderPath = ""
         mockupFolderPath = ""
         smartObjectLayers = [SmartObjectLayer()]
@@ -63,6 +102,11 @@ class MockupGeneratorViewModel: ObservableObject {
         mockupFileCount = 0
         inputFilePreview = []
         mockupFilePreview = []
+        generatedScriptPath = ""
+        
+        // Wyczyść zapisane ścieżki z UserDefaults
+        PathRestorationService.removePath(for: .inputFolder)
+        PathRestorationService.removePath(for: .mockupFolder)
     }
     
     private func validateInputFolder() {
@@ -144,16 +188,35 @@ class MockupGeneratorViewModel: ObservableObject {
         return result.isValid
     }
     
+    @Published var generatedScriptPath: String = ""
+    @Published var showResetConfirmation: Bool = false
+    
     func generateScript() {
         guard validateForm() else { return }
         
-        // Placeholder - implementacja generowania skryptu JSX
-        // Tutaj zostanie dodana logika generowania pliku JSX
-        showSuccessMessage = true
+        let result = JSXGeneratorService.generateMockupScript(
+            inputFolderPath: inputFolderPath,
+            mockupFolderPath: mockupFolderPath,
+            smartObjectLayers: smartObjectLayers
+        )
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-            self.showSuccessMessage = false
+        if result.success {
+            generatedScriptPath = result.filePath ?? ""
+            showSuccessMessage = true
+            errorMessage = ""
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                self.showSuccessMessage = false
+            }
+        } else {
+            errorMessage = result.errorMessage ?? "Nie udało się wygenerować skryptu"
+            showSuccessMessage = false
         }
+    }
+    
+    func openGeneratedScriptFolder() {
+        guard !generatedScriptPath.isEmpty else { return }
+        JSXGeneratorService.openInFinder(path: generatedScriptPath)
     }
 }
 
@@ -336,7 +399,7 @@ struct MockupGeneratorView: View {
                         Text("Skrypt został wygenerowany pomyślnie!")
                         Spacer()
                         Button("Otwórz folder") {
-                            // Placeholder - implementacja otwierania folderu
+                            viewModel.openGeneratedScriptFolder()
                         }
                         .buttonStyle(.bordered)
                     }
@@ -348,7 +411,7 @@ struct MockupGeneratorView: View {
                 // Przyciski akcji
                 HStack {
                     Button("Resetuj") {
-                        viewModel.resetForm()
+                        viewModel.requestResetConfirmation()
                     }
                     .buttonStyle(.bordered)
                     
@@ -362,6 +425,16 @@ struct MockupGeneratorView: View {
                 }
             }
             .padding()
+        }
+        .alert("Potwierdź resetowanie", isPresented: $viewModel.showResetConfirmation) {
+            Button("Anuluj", role: .cancel) {
+                viewModel.cancelReset()
+            }
+            Button("Resetuj", role: .destructive) {
+                viewModel.confirmReset()
+            }
+        } message: {
+            Text("Czy na pewno chcesz wyczyścić wszystkie pola formularza? Ta operacja usunie również zapisane ścieżki folderów.")
         }
     }
 }

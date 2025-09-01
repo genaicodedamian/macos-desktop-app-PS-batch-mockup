@@ -9,7 +9,10 @@ import SwiftUI
 
 class SmartObjectRenamerViewModel: ObservableObject {
     @Published var psdFolderPath: String = "" {
-        didSet { validatePSDFolder() }
+        didSet { 
+            validatePSDFolder()
+            PathRestorationService.savePath(psdFolderPath, for: .psdFolder)
+        }
     }
     @Published var newLayerName: String = "" {
         didSet { validateLayerName() }
@@ -20,7 +23,33 @@ class SmartObjectRenamerViewModel: ObservableObject {
     @Published var psdFileCount: Int = 0
     @Published var psdFilePreview: [String] = []
     
-    func resetForm() {
+    init() {
+        restorePaths()
+    }
+    
+    private func restorePaths() {
+        let restoredPSDPath = PathRestorationService.restorePath(for: .psdFolder)
+        
+        if !restoredPSDPath.isEmpty {
+            _psdFolderPath = Published(initialValue: restoredPSDPath)
+            psdFolderPath = restoredPSDPath
+        }
+    }
+    
+    func requestResetConfirmation() {
+        showResetConfirmation = true
+    }
+    
+    func confirmReset() {
+        resetForm()
+        showResetConfirmation = false
+    }
+    
+    func cancelReset() {
+        showResetConfirmation = false
+    }
+    
+    private func resetForm() {
         psdFolderPath = ""
         newLayerName = ""
         showSuccessMessage = false
@@ -28,6 +57,10 @@ class SmartObjectRenamerViewModel: ObservableObject {
         validationResults.removeAll()
         psdFileCount = 0
         psdFilePreview = []
+        generatedScriptPath = ""
+        
+        // Wyczyść zapisaną ścieżkę z UserDefaults
+        PathRestorationService.removePath(for: .psdFolder)
     }
     
     private func validatePSDFolder() {
@@ -77,16 +110,34 @@ class SmartObjectRenamerViewModel: ObservableObject {
         return result.isValid
     }
     
+    @Published var generatedScriptPath: String = ""
+    @Published var showResetConfirmation: Bool = false
+    
     func generateScript() {
         guard validateForm() else { return }
         
-        // Placeholder - implementacja generowania skryptu JSX do zmiany nazw
-        // Tutaj zostanie dodana logika generowania pliku JSX
-        showSuccessMessage = true
+        let result = JSXGeneratorService.generateRenamerScript(
+            psdFolderPath: psdFolderPath,
+            newLayerName: newLayerName
+        )
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-            self.showSuccessMessage = false
+        if result.success {
+            generatedScriptPath = result.filePath ?? ""
+            showSuccessMessage = true
+            errorMessage = ""
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                self.showSuccessMessage = false
+            }
+        } else {
+            errorMessage = result.errorMessage ?? "Nie udało się wygenerować skryptu"
+            showSuccessMessage = false
         }
+    }
+    
+    func openGeneratedScriptFolder() {
+        guard !generatedScriptPath.isEmpty else { return }
+        JSXGeneratorService.openInFinder(path: generatedScriptPath)
     }
 }
 
@@ -257,7 +308,7 @@ struct SmartObjectRenamerView: View {
                         }
                         Spacer()
                         Button("Otwórz folder") {
-                            // Placeholder - implementacja otwierania folderu
+                            viewModel.openGeneratedScriptFolder()
                         }
                         .buttonStyle(.bordered)
                     }
@@ -269,7 +320,7 @@ struct SmartObjectRenamerView: View {
                 // Przyciski akcji
                 HStack {
                     Button("Resetuj") {
-                        viewModel.resetForm()
+                        viewModel.requestResetConfirmation()
                     }
                     .buttonStyle(.bordered)
                     
@@ -283,6 +334,16 @@ struct SmartObjectRenamerView: View {
                 }
             }
             .padding()
+        }
+        .alert("Potwierdź resetowanie", isPresented: $viewModel.showResetConfirmation) {
+            Button("Anuluj", role: .cancel) {
+                viewModel.cancelReset()
+            }
+            Button("Resetuj", role: .destructive) {
+                viewModel.confirmReset()
+            }
+        } message: {
+            Text("Czy na pewno chcesz wyczyścić wszystkie pola formularza? Ta operacja usunie również zapisaną ścieżkę folderu.")
         }
     }
 }
