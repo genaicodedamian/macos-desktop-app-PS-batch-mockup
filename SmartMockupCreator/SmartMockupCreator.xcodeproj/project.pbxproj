@@ -14,9 +14,9 @@
 		F10A1B3E2C8B3E8F00123456 /* MockupGeneratorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10A1B3D2C8B3E8F00123456 /* MockupGeneratorView.swift */; };
 		F10A1B402C8B3EA000123456 /* SmartObjectRenamerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10A1B3F2C8B3EA000123456 /* SmartObjectRenamerView.swift */; };
 		F10A1B422C8B3EB100123456 /* FolderPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10A1B412C8B3EB100123456 /* FolderPicker.swift */; };
-		F10A1B432C8B3EC200123456 /* ValidationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10A1B432C8B3EC200123456 /* ValidationService.swift */; };
-		F10A1B442C8B3ED300123456 /* JSXGeneratorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10A1B442C8B3ED300123456 /* JSXGeneratorService.swift */; };
-		F10A1B452C8B3EE400123456 /* PathRestorationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10A1B452C8B3EE400123456 /* PathRestorationService.swift */; };
+		F10A1B432C8B3EC200123456 /* ValidationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10A1B472C8B3EC200123456 /* ValidationService.swift */; };
+		F10A1B442C8B3ED300123456 /* JSXGeneratorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10A1B482C8B3ED300123456 /* JSXGeneratorService.swift */; };
+		F10A1B452C8B3EE400123456 /* PathRestorationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10A1B492C8B3EE400123456 /* PathRestorationService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,9 +29,9 @@
 		F10A1B3D2C8B3E8F00123456 /* MockupGeneratorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockupGeneratorView.swift; sourceTree = "<group>"; };
 		F10A1B3F2C8B3EA000123456 /* SmartObjectRenamerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartObjectRenamerView.swift; sourceTree = "<group>"; };
 		F10A1B412C8B3EB100123456 /* FolderPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderPicker.swift; sourceTree = "<group>"; };
-		F10A1B432C8B3EC200123456 /* ValidationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationService.swift; sourceTree = "<group>"; };
-		F10A1B442C8B3ED300123456 /* JSXGeneratorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSXGeneratorService.swift; sourceTree = "<group>"; };
-		F10A1B452C8B3EE400123456 /* PathRestorationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathRestorationService.swift; sourceTree = "<group>"; };
+		F10A1B472C8B3EC200123456 /* ValidationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationService.swift; sourceTree = "<group>"; };
+		F10A1B482C8B3ED300123456 /* JSXGeneratorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSXGeneratorService.swift; sourceTree = "<group>"; };
+		F10A1B492C8B3EE400123456 /* PathRestorationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathRestorationService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -69,9 +69,9 @@
 				F10A1B3D2C8B3E8F00123456 /* MockupGeneratorView.swift */,
 				F10A1B3F2C8B3EA000123456 /* SmartObjectRenamerView.swift */,
 				F10A1B412C8B3EB100123456 /* FolderPicker.swift */,
-				F10A1B432C8B3EC200123456 /* ValidationService.swift */,
-				F10A1B442C8B3ED300123456 /* JSXGeneratorService.swift */,
-				F10A1B452C8B3EE400123456 /* PathRestorationService.swift */,
+				F10A1B472C8B3EC200123456 /* ValidationService.swift */,
+				F10A1B482C8B3ED300123456 /* JSXGeneratorService.swift */,
+				F10A1B492C8B3EE400123456 /* PathRestorationService.swift */,
 				F10A1B322C8B3E5100123456 /* Assets.xcassets */,
 				F10A1B372C8B3E5100123456 /* SmartMockupCreator.entitlements */,
 				F10A1B342C8B3E5100123456 /* Preview Content */,
@@ -205,6 +205,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -268,6 +269,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

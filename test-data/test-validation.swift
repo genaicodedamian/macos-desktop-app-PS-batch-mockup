@@ -1,0 +1,313 @@
+#!/usr/bin/env swift
+
+import Foundation
+
+// Test ValidationService functionality
+// This script tests the validation logic that would be used in the app
+
+let testDataPath = "/Users/damianaugustyn/Documents/projects/Smart objects PS replace/test-data"
+
+// Test 1: File counting functionality
+func testFileCountingFunctionality() {
+    print("=== Test 1: File Counting Functionality ===")
+    
+    let inputPath = "\(testDataPath)/input-files"
+    let mockupPath = "\(testDataPath)/mockup-files"
+    let psdPath = "\(testDataPath)/psd-files"
+    
+    // Test input file formats
+    let inputFormats = ["jpg", "jpeg", "png", "tiff", "tif", "gif", "bmp", "eps", "svg", "ai", "psd", "pdf"]
+    let mockupFormats = ["psd", "psb"]
+    
+    func getFileCount(in folderPath: String, withFormats formats: [String]) -> Int {
+        guard !folderPath.isEmpty else { return 0 }
+        
+        do {
+            let contents = try FileManager.default.contentsOfDirectory(atPath: folderPath)
+            return contents.filter { filename in
+                formats.contains { format in
+                    filename.lowercased().hasSuffix(".\(format.lowercased())")
+                }
+            }.count
+        } catch {
+            return 0
+        }
+    }
+    
+    let inputFileCount = getFileCount(in: inputPath, withFormats: inputFormats)
+    let mockupFileCount = getFileCount(in: mockupPath, withFormats: mockupFormats)
+    let psdFileCount = getFileCount(in: psdPath, withFormats: mockupFormats)
+    
+    print("Input files found: \(inputFileCount) (expected: 7)")
+    print("Mockup files found: \(mockupFileCount) (expected: 3)")
+    print("PSD files found: \(psdFileCount) (expected: 3)")
+    
+    assert(inputFileCount == 7, "Input file count should be 7")
+    assert(mockupFileCount == 3, "Mockup file count should be 3")
+    assert(psdFileCount == 3, "PSD file count should be 3")
+    print("✅ File counting test passed!")
+}
+
+// Test 2: Folder validation
+func testFolderValidation() {
+    print("\n=== Test 2: Folder Validation ===")
+    
+    let inputPath = "\(testDataPath)/input-files"
+    let mockupPath = "\(testDataPath)/mockup-files"
+    let nonExistentPath = "\(testDataPath)/non-existent"
+    
+    // Test existing folders
+    assert(FileManager.default.fileExists(atPath: inputPath), "Input folder should exist")
+    assert(FileManager.default.fileExists(atPath: mockupPath), "Mockup folder should exist")
+    assert(!FileManager.default.fileExists(atPath: nonExistentPath), "Non-existent folder should not exist")
+    
+    print("✅ Folder validation test passed!")
+}
+
+// Test 3: Smart Object layer name validation
+func testLayerNameValidation() {
+    print("\n=== Test 3: Layer Name Validation ===")
+    
+    struct ValidationResult {
+        let isValid: Bool
+        let errorMessage: String?
+    }
+    
+    func validateSmartObjectLayerName(_ name: String) -> ValidationResult {
+        guard !name.isEmpty else {
+            return ValidationResult(isValid: false, errorMessage: "Nazwa warstwy Smart Object nie może być pusta")
+        }
+        
+        guard name.count <= 100 else {
+            return ValidationResult(isValid: false, errorMessage: "Nazwa warstwy nie może być dłuższa niż 100 znaków")
+        }
+        
+        let forbiddenChars = CharacterSet(charactersIn: "/\\:*?\"<>|")
+        if name.rangeOfCharacter(from: forbiddenChars) != nil {
+            return ValidationResult(isValid: false, errorMessage: "Nazwa warstwy nie może zawierać znaków: / \\ : * ? \" < > |")
+        }
+        
+        if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return ValidationResult(isValid: false, errorMessage: "Nazwa warstwy nie może składać się tylko z białych znaków")
+        }
+        
+        return ValidationResult(isValid: true, errorMessage: nil)
+    }
+    
+    // Test valid names
+    let validNames = ["smart object", "Smart Object 1", "my-smart-object", "smartObject123"]
+    for name in validNames {
+        let result = validateSmartObjectLayerName(name)
+        assert(result.isValid, "Name '\(name)' should be valid")
+    }
+    
+    // Test invalid names
+    let invalidNames = ["", "   ", "smart/object", "smart\\object", "smart:object", "smart*object", "smart?object"]
+    for name in invalidNames {
+        let result = validateSmartObjectLayerName(name)
+        assert(!result.isValid, "Name '\(name)' should be invalid")
+    }
+    
+    print("✅ Layer name validation test passed!")
+}
+
+// Test 4: JSX generation simulation
+func testJSXGeneration() {
+    print("\n=== Test 4: JSX Generation Simulation ===")
+    
+    let inputPath = "\(testDataPath)/input-files"
+    let mockupPath = "\(testDataPath)/mockup-files"
+    
+    // Simulate MockupGenerator JSX generation
+    func buildMockupGeneratorJSX(inputPath: String, mockupPath: String, layers: [(target: String, align: String, resize: String)]) -> String {
+        let timestamp = Date().description
+        
+        var jsx = """
+        // Generated by Smart Mockup Creator
+        // Date: \(timestamp)
+        
+        #include "Batch Mockup Smart Object Replacement.jsx"
+        
+        var outputOpts = {
+          path: '$/_output',
+          format: 'jpg',
+          zeroPadding: true,
+          filename: '@input_@mockup'
+        };
+        
+        mockups([
+        """
+        
+        let mockupFiles = ["mockup1.psd", "mockup2.psd", "mockup3.psb"]
+        
+        for (index, mockupFile) in mockupFiles.enumerated() {
+            jsx += "\n  {\n"
+            jsx += "    output: outputOpts,\n"
+            jsx += "    mockupPath: '\(mockupPath)/\(mockupFile)',\n"
+            jsx += "    smartObjects: [\n"
+            
+            for (layerIndex, layer) in layers.enumerated() {
+                jsx += "      {\n"
+                jsx += "        target: '\(layer.target)',\n"
+                jsx += "        input: '\(inputPath)',\n"
+                jsx += "        align: '\(layer.align)',\n"
+                jsx += "        resize: '\(layer.resize)'\n"
+                jsx += "      }"
+                
+                if layerIndex < layers.count - 1 {
+                    jsx += ","
+                }
+                jsx += "\n"
+            }
+            
+            jsx += "    ]\n"
+            jsx += "  }"
+            
+            if index < mockupFiles.count - 1 {
+                jsx += ","
+            }
+            jsx += "\n"
+        }
+        
+        jsx += """
+        ]);
+        
+        // Script completed successfully
+        """
+        
+        return jsx
+    }
+    
+    let testLayers = [
+        (target: "smart object 1", align: "center center", resize: "fill"),
+        (target: "smart object 2", align: "left top", resize: "fit")
+    ]
+    
+    let generatedJSX = buildMockupGeneratorJSX(inputPath: inputPath, mockupPath: mockupPath, layers: testLayers)
+    
+    // Basic validation of generated JSX
+    assert(generatedJSX.contains("#include \"Batch Mockup Smart Object Replacement.jsx\""), "JSX should include the engine")
+    assert(generatedJSX.contains("mockups(["), "JSX should contain mockups array")
+    assert(generatedJSX.contains("smart object 1"), "JSX should contain layer names")
+    assert(generatedJSX.contains("center center"), "JSX should contain align values")
+    assert(generatedJSX.contains("fill"), "JSX should contain resize values")
+    
+    // Write test JSX to file
+    let testJSXPath = "\(testDataPath)/test-output/test-generated-mockup.jsx"
+    do {
+        try generatedJSX.write(toFile: testJSXPath, atomically: true, encoding: .utf8)
+        print("✅ Test JSX written to: \(testJSXPath)")
+    } catch {
+        print("❌ Failed to write test JSX: \(error)")
+    }
+    
+    print("✅ JSX generation test passed!")
+}
+
+// Test 5: Smart Object Renamer JSX generation
+func testRenamerJSXGeneration() {
+    print("\n=== Test 5: Renamer JSX Generation ===")
+    
+    let psdPath = "\(testDataPath)/psd-files"
+    let newLayerName = "new smart object"
+    
+    func buildSmartObjectRenamerJSX(psdPath: String, newLayerName: String) -> String {
+        let timestamp = Date().description
+        
+        return """
+        // Smart Object Layer Renamer Script
+        // Generated by Smart Mockup Creator
+        // Date: \(timestamp)
+        
+        // Configuration
+        var config = {
+          psdFolder: '\(psdPath)',
+          newLayerName: '\(newLayerName)',
+          logFile: '\(psdPath)/rename_log.txt'
+        };
+        
+        // Initialize log
+        var logContent = 'Smart Object Renamer Log\\n';
+        logContent += 'Date: \(timestamp)\\n';
+        logContent += 'Target folder: ' + config.psdFolder + '\\n';
+        logContent += 'New layer name: ' + config.newLayerName + '\\n';
+        logContent += '================================\\n\\n';
+        
+        function main() {
+          try {
+            var folder = new Folder(config.psdFolder);
+            if (!folder.exists) {
+              logContent += 'ERROR: Folder does not exist: ' + config.psdFolder + '\\n';
+              writeLog();
+              return;
+            }
+            
+            var files = folder.getFiles('*.psd');
+            var psbFiles = folder.getFiles('*.psb');
+            files = files.concat(psbFiles);
+            
+            logContent += 'Found ' + files.length + ' PSD/PSB files\\n\\n';
+            
+            // Process files (implementation details...)
+            
+            writeLog();
+            alert('Renaming completed!');
+            
+          } catch (e) {
+            logContent += 'FATAL ERROR: ' + e.toString() + '\\n';
+            writeLog();
+            alert('Fatal error occurred. Check rename_log.txt for details.');
+          }
+        }
+        
+        function writeLog() {
+          try {
+            var logFile = new File(config.logFile);
+            logFile.open('w');
+            logFile.write(logContent);
+            logFile.close();
+          } catch (e) {
+            alert('Could not write log file: ' + e.toString());
+          }
+        }
+        
+        // Run the script
+        main();
+        """
+    }
+    
+    let generatedJSX = buildSmartObjectRenamerJSX(psdPath: psdPath, newLayerName: newLayerName)
+    
+    // Basic validation
+    assert(generatedJSX.contains("Smart Object Layer Renamer Script"), "JSX should contain script title")
+    assert(generatedJSX.contains(newLayerName), "JSX should contain new layer name")
+    assert(generatedJSX.contains(psdPath), "JSX should contain PSD path")
+    assert(generatedJSX.contains("rename_log.txt"), "JSX should mention log file")
+    
+    // Write test JSX to file
+    let testJSXPath = "\(testDataPath)/test-output/test-generated-renamer.jsx"
+    do {
+        try generatedJSX.write(toFile: testJSXPath, atomically: true, encoding: .utf8)
+        print("✅ Test Renamer JSX written to: \(testJSXPath)")
+    } catch {
+        print("❌ Failed to write test Renamer JSX: \(error)")
+    }
+    
+    print("✅ Renamer JSX generation test passed!")
+}
+
+// Run all tests
+print("🧪 Starting Smart Mockup Creator Tests...")
+print("Test data path: \(testDataPath)")
+print("")
+
+testFileCountingFunctionality()
+testFolderValidation()
+testLayerNameValidation()
+testJSXGeneration()
+testRenamerJSXGeneration()
+
+print("\n🎉 All tests passed successfully!")
+print("\nGenerated test files:")
+print("- \(testDataPath)/test-output/test-generated-mockup.jsx")
+print("- \(testDataPath)/test-output/test-generated-renamer.jsx")

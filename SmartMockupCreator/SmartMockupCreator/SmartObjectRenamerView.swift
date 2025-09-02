@@ -195,9 +195,14 @@ struct SmartObjectRenamerView: View {
                                             .foregroundColor(.secondary)
                                         
                                         ForEach(viewModel.psdFilePreview, id: \.self) { filename in
-                                            Text("• \(filename)")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
+                                            HStack(spacing: 4) {
+                                                Image(systemName: ValidationService.getFileIcon(for: filename))
+                                                    .foregroundColor(.purple)
+                                                    .font(.caption)
+                                                Text(filename)
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
                                         }
                                         
                                         if viewModel.psdFileCount > viewModel.psdFilePreview.count {
@@ -311,6 +316,7 @@ struct SmartObjectRenamerView: View {
                             viewModel.openGeneratedScriptFolder()
                         }
                         .buttonStyle(.bordered)
+                        .keyboardShortcut("o", modifiers: [.command, .shift])
                     }
                     .padding()
                     .background(Color.green.opacity(0.1))
@@ -323,6 +329,7 @@ struct SmartObjectRenamerView: View {
                         viewModel.requestResetConfirmation()
                     }
                     .buttonStyle(.bordered)
+                    .keyboardShortcut("r", modifiers: .command)
                     
                     Spacer()
                     
@@ -330,6 +337,7 @@ struct SmartObjectRenamerView: View {
                         viewModel.generateScript()
                     }
                     .buttonStyle(.borderedProminent)
+                    .keyboardShortcut("g", modifiers: .command)
                     .disabled(viewModel.psdFolderPath.isEmpty || viewModel.newLayerName.isEmpty)
                 }
             }

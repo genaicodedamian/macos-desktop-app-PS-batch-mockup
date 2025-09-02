@@ -260,9 +260,14 @@ struct MockupGeneratorView: View {
                                             .foregroundColor(.secondary)
                                         
                                         ForEach(viewModel.inputFilePreview, id: \.self) { filename in
-                                            Text("• \(filename)")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
+                                            HStack(spacing: 4) {
+                                                Image(systemName: ValidationService.getFileIcon(for: filename))
+                                                    .foregroundColor(.blue)
+                                                    .font(.caption)
+                                                Text(filename)
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
                                         }
                                         
                                         if viewModel.inputFileCount > viewModel.inputFilePreview.count {
@@ -314,9 +319,14 @@ struct MockupGeneratorView: View {
                                             .foregroundColor(.secondary)
                                         
                                         ForEach(viewModel.mockupFilePreview, id: \.self) { filename in
-                                            Text("• \(filename)")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
+                                            HStack(spacing: 4) {
+                                                Image(systemName: ValidationService.getFileIcon(for: filename))
+                                                    .foregroundColor(.purple)
+                                                    .font(.caption)
+                                                Text(filename)
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
                                         }
                                         
                                         if viewModel.mockupFileCount > viewModel.mockupFilePreview.count {
@@ -402,6 +412,7 @@ struct MockupGeneratorView: View {
                             viewModel.openGeneratedScriptFolder()
                         }
                         .buttonStyle(.bordered)
+                        .keyboardShortcut("o", modifiers: [.command, .shift])
                     }
                     .padding()
                     .background(Color.green.opacity(0.1))
@@ -414,6 +425,7 @@ struct MockupGeneratorView: View {
                         viewModel.requestResetConfirmation()
                     }
                     .buttonStyle(.bordered)
+                    .keyboardShortcut("r", modifiers: .command)
                     
                     Spacer()
                     
@@ -421,6 +433,7 @@ struct MockupGeneratorView: View {
                         viewModel.generateScript()
                     }
                     .buttonStyle(.borderedProminent)
+                    .keyboardShortcut("g", modifiers: .command)
                     .disabled(viewModel.inputFolderPath.isEmpty || viewModel.mockupFolderPath.isEmpty)
                 }
             }

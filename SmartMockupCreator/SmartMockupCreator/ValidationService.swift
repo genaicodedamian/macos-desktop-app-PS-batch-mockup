@@ -225,4 +225,59 @@ class ValidationService: ObservableObject {
         
         return .valid
     }
+    
+    // MARK: - UI Enhancement Utilities
+    static func getFileIcon(for filename: String) -> String {
+        let ext = filename.lowercased().components(separatedBy: ".").last ?? ""
+        
+        switch ext {
+        case "jpg", "jpeg":
+            return "photo"
+        case "png":
+            return "photo.fill"
+        case "tiff", "tif":
+            return "photo.on.rectangle"
+        case "gif":
+            return "livephoto"
+        case "bmp":
+            return "photo.circle"
+        case "eps", "svg":
+            return "point.3.connected.trianglepath.dotted"
+        case "ai":
+            return "paintbrush.pointed"
+        case "psd", "psb":
+            return "rectangle.stack.fill"
+        case "pdf":
+            return "doc.richtext"
+        default:
+            return "doc"
+        }
+    }
+    
+    static func getFileSize(at path: String) -> String {
+        do {
+            let attributes = try FileManager.default.attributesOfItem(atPath: path)
+            if let fileSize = attributes[.size] as? Int64 {
+                return ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file)
+            }
+        } catch {
+            return "Unknown"
+        }
+        return "Unknown"
+    }
+    
+    static func getFileModificationDate(at path: String) -> String {
+        do {
+            let attributes = try FileManager.default.attributesOfItem(atPath: path)
+            if let modificationDate = attributes[.modificationDate] as? Date {
+                let formatter = DateFormatter()
+                formatter.dateStyle = .short
+                formatter.timeStyle = .short
+                return formatter.string(from: modificationDate)
+            }
+        } catch {
+            return "Unknown"
+        }
+        return "Unknown"
+    }
 }

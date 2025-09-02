@@ -181,9 +181,16 @@ extension FolderPicker {
 }
 
 #Preview {
-    VStack {
-        @State var testPath = ""
-        FolderPicker(folderPath: $testPath, buttonText: "Wybierz folder test")
+    FolderPickerPreview()
+}
+
+struct FolderPickerPreview: View {
+    @State private var testPath = ""
+    
+    var body: some View {
+        VStack {
+            FolderPicker(folderPath: $testPath, buttonText: "Wybierz folder test")
+        }
+        .padding()
     }
-    .padding()
 }

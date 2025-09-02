@@ -17,9 +17,14 @@ struct ContentView: View {
                 Image(systemName: "photo.fill.on.rectangle.fill")
                     .font(.title)
                     .foregroundColor(.blue)
-                Text("Smart Mockup Creator")
-                    .font(.title)
-                    .fontWeight(.bold)
+                VStack(alignment: .leading) {
+                    Text("Smart Mockup Creator")
+                        .font(.title)
+                        .fontWeight(.bold)
+                    Text("⌘G: Generuj • ⌘R: Resetuj • ⇧⌘O: Otwórz folder")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
                 Spacer()
             }
             .padding(.horizontal)
@@ -34,15 +39,16 @@ struct ContentView: View {
             .padding(.horizontal)
             
             // Zawartość zakładek
-            TabView(selection: $selectedTab) {
-                MockupGeneratorView()
-                    .tag(0)
-                
-                SmartObjectRenamerView()
-                    .tag(1)
+            Group {
+                if selectedTab == 0 {
+                    MockupGeneratorView()
+                        .transition(.opacity)
+                } else {
+                    SmartObjectRenamerView()
+                        .transition(.opacity)
+                }
             }
-            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-            .animation(.easeInOut, value: selectedTab)
+            .animation(.easeInOut(duration: 0.3), value: selectedTab)
         }
         .frame(minWidth: 800, minHeight: 600)
     }
