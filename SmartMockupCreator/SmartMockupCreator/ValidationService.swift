@@ -66,6 +66,24 @@ class ValidationService: ObservableObject {
                                          errorMessage: "Folder nie zawiera plików PSD/PSB")
     }
     
+    static func validateOutputFolder(_ path: String) -> ValidationResult {
+        guard !path.isEmpty else {
+            return .invalid("Proszę wybrać folder do zapisu wyników")
+        }
+        
+        let folderValidation = validateFolderExists(path)
+        guard folderValidation.isValid else {
+            return folderValidation
+        }
+        
+        // Sprawdzenie uprawnień do zapisu
+        guard FileManager.default.isWritableFile(atPath: path) else {
+            return .invalid("Brak uprawnień do zapisu w wybranym folderze")
+        }
+        
+        return .valid
+    }
+    
     private static func validateFolderExists(_ path: String) -> ValidationResult {
         let fileManager = FileManager.default
         var isDirectory: ObjCBool = false
@@ -175,6 +193,7 @@ class ValidationService: ObservableObject {
     static func validateMockupGeneratorConfiguration(
         inputFolder: String,
         mockupFolder: String,
+        outputFolder: String,
         smartObjectLayers: [SmartObjectLayer]
     ) -> ValidationResult {
         
@@ -187,6 +206,11 @@ class ValidationService: ObservableObject {
         let mockupValidation = validateMockupFolder(mockupFolder)
         guard mockupValidation.isValid else {
             return mockupValidation
+        }
+        
+        let outputValidation = validateOutputFolder(outputFolder)
+        guard outputValidation.isValid else {
+            return outputValidation
         }
         
         // Walidacja warstw Smart Object

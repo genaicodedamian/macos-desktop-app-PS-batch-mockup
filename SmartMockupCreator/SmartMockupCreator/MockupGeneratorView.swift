@@ -27,6 +27,13 @@ class MockupGeneratorViewModel: ObservableObject {
             PathRestorationService.savePath(mockupFolderPath, for: .mockupFolder)
         }
     }
+    @Published var outputFolderPath: String = "" {
+        didSet { 
+            validateOutputFolder()
+            PathRestorationService.savePath(outputFolderPath, for: .outputFolder)
+        }
+    }
+    @Published var outputFormat: String = "jpg"
     @Published var smartObjectLayers: [SmartObjectLayer] = [SmartObjectLayer()] {
         didSet { validateLayers() }
     }
@@ -45,6 +52,8 @@ class MockupGeneratorViewModel: ObservableObject {
     ]
     
     let resizeOptions = ["fit", "fill", "fillX", "fillY"]
+    
+    let formatOptions = JSXGeneratorService.getSupportedOutputFormats()
     
     init() {
         restorePaths()
@@ -65,6 +74,7 @@ class MockupGeneratorViewModel: ObservableObject {
     private func restorePaths() {
         let restoredInputPath = PathRestorationService.restorePath(for: .inputFolder)
         let restoredMockupPath = PathRestorationService.restorePath(for: .mockupFolder)
+        let restoredOutputPath = PathRestorationService.restorePath(for: .outputFolder)
         
         // Użyj bezpośredniego przypisania, żeby uniknąć podwójnego wywołania didSet
         if !restoredInputPath.isEmpty {
@@ -75,6 +85,11 @@ class MockupGeneratorViewModel: ObservableObject {
         if !restoredMockupPath.isEmpty {
             _mockupFolderPath = Published(initialValue: restoredMockupPath)
             mockupFolderPath = restoredMockupPath
+        }
+        
+        if !restoredOutputPath.isEmpty {
+            _outputFolderPath = Published(initialValue: restoredOutputPath)
+            outputFolderPath = restoredOutputPath
         }
     }
     
@@ -94,6 +109,8 @@ class MockupGeneratorViewModel: ObservableObject {
     private func resetForm() {
         inputFolderPath = ""
         mockupFolderPath = ""
+        outputFolderPath = ""
+        outputFormat = "jpg"
         smartObjectLayers = [SmartObjectLayer()]
         showSuccessMessage = false
         errorMessage = ""
@@ -107,6 +124,7 @@ class MockupGeneratorViewModel: ObservableObject {
         // Wyczyść zapisane ścieżki z UserDefaults
         PathRestorationService.removePath(for: .inputFolder)
         PathRestorationService.removePath(for: .mockupFolder)
+        PathRestorationService.removePath(for: .outputFolder)
     }
     
     private func validateInputFolder() {
@@ -147,6 +165,12 @@ class MockupGeneratorViewModel: ObservableObject {
         updateOverallValidation()
     }
     
+    private func validateOutputFolder() {
+        let result = ValidationService.validateOutputFolder(outputFolderPath)
+        validationResults["outputFolder"] = result
+        updateOverallValidation()
+    }
+    
     private func validateLayers() {
         for (index, layer) in smartObjectLayers.enumerated() {
             let result = ValidationService.validateSmartObjectLayerName(layer.target)
@@ -168,6 +192,7 @@ class MockupGeneratorViewModel: ObservableObject {
         let overallResult = ValidationService.validateMockupGeneratorConfiguration(
             inputFolder: inputFolderPath,
             mockupFolder: mockupFolderPath,
+            outputFolder: outputFolderPath,
             smartObjectLayers: smartObjectLayers
         )
         
@@ -178,6 +203,7 @@ class MockupGeneratorViewModel: ObservableObject {
         let result = ValidationService.validateMockupGeneratorConfiguration(
             inputFolder: inputFolderPath,
             mockupFolder: mockupFolderPath,
+            outputFolder: outputFolderPath,
             smartObjectLayers: smartObjectLayers
         )
         
@@ -197,6 +223,8 @@ class MockupGeneratorViewModel: ObservableObject {
         let result = JSXGeneratorService.generateMockupScript(
             inputFolderPath: inputFolderPath,
             mockupFolderPath: mockupFolderPath,
+            outputFolderPath: outputFolderPath,
+            outputFormat: outputFormat,
             smartObjectLayers: smartObjectLayers
         )
         
@@ -349,6 +377,51 @@ struct MockupGeneratorView: View {
                             }
                         }
                     }
+                    
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Folder do zapisu wyników:")
+                            .fontWeight(.medium)
+                        
+                        FolderPicker(
+                            folderPath: $viewModel.outputFolderPath,
+                            buttonText: "Wybierz folder output"
+                        )
+                        
+                        if !viewModel.outputFolderPath.isEmpty {
+                            if let error = viewModel.validationResults["outputFolder"]?.errorMessage {
+                                HStack {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .foregroundColor(.orange)
+                                        .font(.caption)
+                                    Text(error)
+                                        .font(.caption)
+                                        .foregroundColor(.orange)
+                                }
+                            } else {
+                                HStack {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.green)
+                                        .font(.caption)
+                                    Text("Folder jest gotowy do zapisu")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Format plików wynikowych:")
+                            .fontWeight(.medium)
+                        
+                        Picker("Format", selection: $viewModel.outputFormat) {
+                            ForEach(viewModel.formatOptions, id: \.self) { format in
+                                Text(format.uppercased()).tag(format)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(maxWidth: 200)
+                    }
                 }
                 
                 Divider()
@@ -434,7 +507,7 @@ struct MockupGeneratorView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .keyboardShortcut("g", modifiers: .command)
-                    .disabled(viewModel.inputFolderPath.isEmpty || viewModel.mockupFolderPath.isEmpty)
+                    .disabled(viewModel.inputFolderPath.isEmpty || viewModel.mockupFolderPath.isEmpty || viewModel.outputFolderPath.isEmpty)
                 }
             }
             .padding()

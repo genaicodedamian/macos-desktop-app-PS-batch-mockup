@@ -10,6 +10,7 @@ import Foundation
 enum FolderType: String, CaseIterable {
     case inputFolder = "input_folder"
     case mockupFolder = "mockup_folder"
+    case outputFolder = "output_folder"
     case psdFolder = "psd_folder"
     
     var defaultKey: String {
@@ -22,6 +23,8 @@ enum FolderType: String, CaseIterable {
             return "Folder z plikami wejściowymi"
         case .mockupFolder:
             return "Folder z plikami mockup"
+        case .outputFolder:
+            return "Folder do zapisu wyników"
         case .psdFolder:
             return "Folder z plikami PSD"
         }
